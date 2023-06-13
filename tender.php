@@ -1,28 +1,14 @@
 <?php
 require_once 'simple_html_dom.php';
 require_once 'DB.php';
+require_once 'CurlRequest.php';
 
 set_time_limit(1000);
 
-function request($url, $postdata = null)
-{
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36');
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
-    if ($postdata) {
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
-    }
-
-    $response = curl_exec($ch);
-    curl_close($ch);
-    return $response;
-}
 
 $db = new DB();
+$curlRequest = new CurlRequest();
 $offset = 0;
 
 do {
@@ -31,7 +17,7 @@ do {
     $organizerName = [];
 
     $post = 'limit=10&offset='.$offset.'&total=7436&sortAsc=false&sortColumn=EntityNumber&MultiString=&__AllowedTenderConfigCodes=&IntervalRequestReceivingBeginDate.BeginDate=&IntervalRequestReceivingBeginDate.EndDate=&IntervalRequestReceivingEndDate.BeginDate=&IntervalRequestReceivingEndDate.EndDate=&IntervalBidReceivingBeginDate.BeginDate=&IntervalBidReceivingBeginDate.EndDate=&ClassifiersFieldData.SiteSectionType=bef4c544-ba45-49b9-8e91-85d9483ff2f6&ClassifiersFieldData.ClassifiersFieldData.__SECRET_DO_NOT_USE_OR_YOU_WILL_BE_FIRED=&OrganizerData=';
-    $jsonResponse = request('https://tender.rusal.ru/Tenders/Load', $post);
+    $jsonResponse = $curlRequest->request('https://tender.rusal.ru/Tenders/Load', $post);
 
     $data = json_decode($jsonResponse, true);
 
@@ -52,7 +38,7 @@ do {
         $url = str_replace('*', $value, $reUrl);
 
         $postDoc = str_replace('*', $value, '/Tender/*/1');
-        $jsonResponseDoc = request($url, $postDoc);
+        $jsonResponseDoc = $curlRequest->request($url, $postDoc);
 
         $dataDoc = json_decode($jsonResponseDoc, true);
         $domDoc = str_get_html($jsonResponseDoc);
@@ -69,7 +55,7 @@ do {
         $Doc = $domDoc->find('.file-download-link');
 
         foreach ($Doc as $element) {
-            $name = trim($element->plaintext);
+            $name = preg_replace('/\s+/', ' ', $element->plaintext);
             $link = 'https://tender.rusal.ru' . $element->href;
 
             $documents[] = [
