@@ -20,7 +20,7 @@ class DB
         }
     }
 
-    public function insertGame(array $tenders, $key)
+    public function insertTender(array $tenders, $key)
     {
         $stmtCheck = $this->db->prepare("
         SELECT COUNT(*) FROM tender WHERE TenderNumber = :TenderNumber
