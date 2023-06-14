@@ -67,7 +67,7 @@ do {
         $tenders[] = $tender;
 
         $tenders[$key]['Document'] = $documents;
-        $db->insertGame($tenders, $key);
+        $db->insertTender($tenders, $key);
 
         $domDoc->clear();
     }
